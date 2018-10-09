@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const sprintf = require('sprintf-js').sprintf;
 
-var counter = 0;
 
 // Private helper functions ////////////////////////////////////////////////////
 
@@ -15,16 +14,19 @@ const zeroPaddedNumber = (num) => {
   return sprintf('%05d', num);
 };
 
+//this fn just reading the current counter
 const readCounter = (callback) => {
   fs.readFile(exports.counterFile, (err, fileData) => {
     if (err) {
       callback(null, 0);
     } else {
+      //Number here converts the string into a number
       callback(null, Number(fileData));
     }
   });
 };
 
+//when we run this fn, we'll be storing a number, but not incrementing
 const writeCounter = (count, callback) => {
   var counterString = zeroPaddedNumber(count);
   fs.writeFile(exports.counterFile, counterString, (err) => {
@@ -38,9 +40,19 @@ const writeCounter = (count, callback) => {
 
 // Public API - Fix this function //////////////////////////////////////////////
 
-exports.getNextUniqueId = () => {
-  counter = counter + 1;
-  return zeroPaddedNumber(counter);
+exports.getNextUniqueId = (cb) => {
+  var err = null;
+  readCounter((_, number) => {
+    number++;
+    writeCounter(number, (err2, str) => {
+      cb(err2, str);
+    });
+  });
+
+
+  //return zeroPaddedNumber(number);
+
+
 };
 
 

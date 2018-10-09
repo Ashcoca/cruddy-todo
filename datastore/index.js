@@ -8,26 +8,41 @@ var items = {};
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+  counter.getNextUniqueId((err, id) => {
+    items[id] = text;
+    
+    fs.writeFile(path.join(exports.dataDir, id + '.txt'), text, (err) => {
+      if (err) {
+        throw ('error creating text');
+      } else {
+        callback(null, { id, text });
+      }
+    });
+  });
 };
 
 exports.readAll = (callback) => {
   var data = [];
-  _.each(items, (text, id) => {
-    data.push({ id, text });
+  fs.readdir(exports.dataDir, (err, items) => {
+    _.each(items, (filename) => {
+      var fileHead = filename.split('.')[0];
+      data.push({ id: fileHead, text: fileHead });
+    });
+    
+    callback(null, data);
   });
-  callback(null, data);
 };
 
 exports.readOne = (id, callback) => {
   var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  
+  fs.readFile(path.join(exports.dataDir, id + '.txt'), (err, fileData) => {
+    if (err) {
+      callback(new Error(`No item with id: ${id}`));
+    } else {
+      callback(null, { id, text: fileData.toString() });
+    }
+  });
 };
 
 exports.update = (id, text, callback) => {
