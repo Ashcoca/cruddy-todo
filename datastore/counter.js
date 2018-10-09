@@ -31,6 +31,7 @@ const writeCounter = (count, callback) => {
   var counterString = zeroPaddedNumber(count);
   fs.writeFile(exports.counterFile, counterString, (err) => {
     if (err) {
+      //want to actually write errors during catastrophic failures
       throw ('error writing counter');
     } else {
       callback(null, counterString);
@@ -44,6 +45,7 @@ exports.getNextUniqueId = (cb) => {
   var err = null;
   readCounter((_, number) => {
     number++;
+    //here the err we're passing refers to null, b/c it's not a huge error
     writeCounter(number, (err2, str) => {
       cb(err2, str);
     });

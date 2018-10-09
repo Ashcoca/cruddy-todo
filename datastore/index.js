@@ -15,6 +15,8 @@ exports.create = (text, callback) => {
       if (err) {
         callback(new Error('error creating text'));
       } else {
+        //the reason it's {id, text} is b/c that format is dictated by the client
+        //keep in mind this is a server side sprint
         callback(null, { id, text });
       }
     });
@@ -22,8 +24,12 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
-  var data = [];
   fs.readdir(exports.dataDir, (err, items) => {
+    //Added this b/c if we get an error we don't want any more work done on this fn
+    if (err) {
+      return callback(err)
+    }
+    var data = [];
     _.each(items, (filename) => {
       var fileHead = filename.split('.')[0];
       data.push({ id: fileHead, text: fileHead });
