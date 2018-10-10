@@ -2,6 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+var Promise = require('bluebird');
+
+
+var readFileAsync = Promise.promisify(fs.readFile);
+var readdirAsync = Promise.promisify(fs.readdir);
 
 var items = {};
 
@@ -24,19 +29,64 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
-  fs.readdir(exports.dataDir, (err, items) => {
-    //Added this b/c if we get an error we don't want any more work done on this fn
-    if (err) {
-      return callback(err)
-    }
-    var data = [];
-    _.each(items, (filename) => {
-      var fileHead = filename.split('.')[0];
-      data.push({ id: fileHead, text: fileHead });
-    });
+  // fs.readdir(exports.dataDir, (err, items) => {
+  //   //Added this b/c if we get an error we don't want any more work done on this fn
+  //   if (err) {
+  //     return callback(err)
+  //   }
+  //   var data = [];
+  //   _.each(items, (filename) => {
+  //     var fileHead = filename.split('.')[0];
+  //     //var fileText 
+  //     data.push({ id: fileHead, text: fileHead });
+  //   });
     
-    callback(null, data);
-  });
+  //   callback(null, data);
+  // });
+  
+  // readdirAsync
+  // readFileAsync
+  
+  // readdirAsync(exports.dataDir)
+  //   .then((fileNames) => {
+  //     var ids = fileNames.map((file) => path.basename(file, '.txt'));
+  //     var texts = Promise.all(fileNames.map((file) => readFileAsync(file)));
+  //     return [ids, texts];
+  //   })
+  //   .then((thing) => {
+  //     var data = [];
+  //     for (let i = 0; i < ids.length; i++) {
+  //       data.push({ id: ids[i], text: texts[i] });
+  //     }
+  //     callback(null, data);
+  //   })
+  //   .catch((err) => (err));
+
+
+  readdirAsync(exports.dataDir)
+    .then((fileNames) => {
+      var ids = fileNames.map((file) => path.basename(file, '.txt'));
+      
+      Promise.all(fileNames.map((file) => readFileAsync(path.join(exports.dataDir, file))))
+        .then((texts) => {
+          var data = [];
+          for (let i = 0; i < ids.length; i++) {
+            data.push({ id: ids[i], text: texts[i].toString() });
+          }
+          callback(null, data);
+        })});
+
+
+  // ['/.../.../xxxxx.txt', '/.../.../yyyyy.txt', ...]
+  // |
+  // [promise1, promise2, ...]
+  
+  // Promise.all([promise1, promise2, ...])
+  //   .then((items) => {...})
+  
+  // path.basename('/.../.../xxxxx.txt', '.txt') <- xxxxx
+  
+  
 };
 
 exports.readOne = (id, callback) => {
